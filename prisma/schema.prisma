@@ -1,0 +1,120 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// User model for authentication
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  blogPosts BlogPost[]
+  docs      Doc[]
+  projects  Project[]
+}
+
+// Blog post model
+model BlogPost {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String?
+  content     String   @db.Text
+  published   Boolean  @default(false)
+  tags        String[]
+  readingTime Int?     // in minutes
+  imageUrl    String?  // featured image URL
+  views       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([slug])
+  @@index([published])
+}
+
+// Documentation folder model (hierarchical)
+model DocFolder {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String
+  description String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Self-referencing for hierarchy
+  parentId String?
+  parent   DocFolder?  @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children DocFolder[] @relation("FolderHierarchy")
+
+  docs Doc[]
+
+  @@unique([parentId, slug])
+  @@index([parentId])
+}
+
+// Documentation model
+model Doc {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String
+  description String?
+  content     String   @db.Text
+  published   Boolean  @default(false)
+  order       Int      @default(0)
+  tags        String[]
+  views       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  folderId String
+  folder   DocFolder @relation(fields: [folderId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@unique([folderId, slug])
+  @@index([folderId])
+  @@index([published])
+}
+
+// Project model
+model Project {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String
+  content     String?  @db.Text
+  technologies String[]
+  category    String
+  featured    Boolean  @default(false)
+  published   Boolean  @default(false)
+  githubUrl   String?
+  liveUrl     String?
+  imageUrl    String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([slug])
+  @@index([published])
+  @@index([featured])
+}
