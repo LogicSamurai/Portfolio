@@ -21,11 +21,11 @@ export async function GET() {
   <atom:link href="${baseUrl}/api/rss" rel="self" type="application/rss+xml" />
   ${blogs
             .map(
-                (post: { title: string; slug: string; excerpt: string | null; createdAt: Date }) => `
+                (post: { title: string; slug: string; description: string | null; createdAt: Date }) => `
     <item>
       <title>${post.title}</title>
       <link>${baseUrl}/blog/${post.slug}</link>
-      <description>${post.excerpt || ''}</description>
+      <description>${post.description || ''}</description>
       <pubDate>${new Date(post.createdAt).toUTCString()}</pubDate>
       <guid>${baseUrl}/blog/${post.slug}</guid>
     </item>`
